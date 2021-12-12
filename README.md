@@ -16,3 +16,9 @@ Uses:
  - Winston
  - Mocha
 
+Additional in 1.1.0:
+ - Bower
+ - Wiredep
+ - Usemin
+ - Dockerfile
+ - dist package

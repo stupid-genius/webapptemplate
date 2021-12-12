@@ -2,6 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 const servefavicon = require('serve-favicon');
 const path = require('path');
+const config = require('./config');
 const Logger = require('./logger');
 
 /* eslint-disable-next-line no-undef */
@@ -14,7 +15,8 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'ejs');
 
 app.use(morgan('common'));
-app.use(servefavicon('./app/public/images/favicon.ico'));
+/* eslint-disable-next-line no-undef */
+app.use(servefavicon(path.join(__dirname, '../public/images/favicon.ico')));
 app.use(require('./routes'));
 /* eslint-disable-next-line no-undef */
 app.use(express.static(path.join(__dirname, '../public')));
@@ -36,6 +38,7 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(3000, () => {
+	logger.debug(`server running in ${config.nodeEnv} mode`);
 	logger.info('server listening on port 3000');
 });
 
