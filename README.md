@@ -22,3 +22,7 @@ Additional in 1.1.0:
  - Usemin
  - Dockerfile
  - dist package
+
+New in 1.2.0:
+ - Replaced Grunt, Bower, etc with Webpack
+ - I just threw up in my mouth a little bit

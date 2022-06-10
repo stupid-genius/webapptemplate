@@ -21,14 +21,14 @@ app.use(require('./routes'));
 /* eslint-disable-next-line no-undef */
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.use((req, res, next) => {
+app.use((_req, _res, next) => {
 	const err = new Error('Not Found');
 	err.status = 404;
 	next(err);
 });
 
 /* eslint-disable no-unused-vars */
-app.use((err, req, res, _next) => {
+app.use((err, _req, res, _next) => {
 	res.status(err.status || 500);
 	res.render('error', {
 		error: logger.level === 'debug' ? err : {},
@@ -37,8 +37,8 @@ app.use((err, req, res, _next) => {
 	});
 });
 
-app.listen(3000, () => {
+app.listen(config.appPort, config.appHost, () => {
 	logger.debug(`server running in ${config.nodeEnv} mode`);
-	logger.info('server listening on port 3000');
+	logger.info(`server listening on port ${config.appPort}`);
 });
 
