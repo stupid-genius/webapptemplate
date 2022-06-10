@@ -15,3 +15,7 @@ Uses:
  - Morgan
  - Node
  - Winston
+
+New in 1.2.0:
+ - Replaced Grunt, Bower, etc with Webpack
+ - I just threw up in my mouth a little bit
