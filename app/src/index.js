@@ -16,7 +16,7 @@ app.set('view engine', 'ejs');
 
 app.use(morgan('common'));
 /* eslint-disable-next-line no-undef */
-app.use(servefavicon(path.join(__dirname, '../public/images/favicon.ico')));
+app.use(servefavicon(path.join(__dirname, '../public/favicon.ico')));
 app.use(require('./routes'));
 /* eslint-disable-next-line no-undef */
 app.use(express.static(path.join(__dirname, '../public')));
