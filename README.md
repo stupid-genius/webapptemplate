@@ -8,17 +8,10 @@ I decided to put together my own starting point for simple, usually disposable, 
 
 Uses:
  - BrowserSync
- - Grunt
- - Node
+ - EJS
+ - esbuild
  - Express
- - ejs
- - Morgan
- - Winston
  - Mocha
-
-Additional in 1.1.0:
- - Bower
- - Wiredep
- - Usemin
- - Dockerfile
- - dist package
+ - Morgan
+ - Node
+ - Winston
