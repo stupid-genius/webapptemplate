@@ -11,6 +11,7 @@ Uses:
  - EJS
  - esbuild
  - Express
+ - Karma
  - Mocha
  - Morgan
  - Node

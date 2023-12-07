@@ -20,14 +20,14 @@ const onBuild = {
 };
 
 const context = await esbuild.context({
-	entryPoints: ['app/public/scripts/index.js', 'app/public/styles/main.css'],
+	entryPoints: ['app/client/scripts/index.js', 'app/client/styles/main.css'],
 	// entryNames: '[dir]/[name]-[hash]',
 	loader: {'.png': 'dataurl'},
 	bundle: true,
 	minify: !devMode,
 	sourcemap: devMode,
-	outbase: 'app/public',
-	outdir: 'dist/public',
+	outbase: 'app/client',
+	outdir: 'dist/client',
 	// plugins: [onBuild]
 });
 
@@ -41,7 +41,7 @@ async function buildCmd(cmd){
 		case 'serve':
 			console.log('serving...');
 			console.log(await context.serve({
-				servedir: 'dist/public',
+				servedir: 'dist/client',
 				port: 3000
 			}));
 			break;

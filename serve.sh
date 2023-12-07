@@ -7,9 +7,10 @@ set -a
 set +a
 APPPORT=3000
 
-./node_modules/.bin/browser-sync start --port 9000 --proxy localhost:$APPPORT --no-open -f dist/public &
+./node_modules/.bin/browser-sync start --port 9000 --proxy localhost:$APPPORT --no-open -f dist/client &
 BSPID=$!
 echo BrowserSync PID $BSPID
+(fswatch -ol 1 app/client | xargs -n1 -I{} ./build.sh spa) &
 if [[ -z "$1" || "$1" -ne spa ]]; then
 	npm run nodemon
 else
@@ -18,7 +19,6 @@ else
 	# ESPID=$!
 	# echo esbuild PID $ESPID
 
-	(fswatch -ol 1 app/public | xargs -n1 -I{} ./build.sh spa) &
-	npx http-server dist/public/ -p $APPPORT
+	npx http-server dist/client/ -p $APPPORT
 fi
-# trap "kill $BSPID $ESPID" EXIT INT HUP TERM QUIT ABRT
+trap "kill $BSPID $ESPID" INT HUP TERM QUIT ABRT EXIT
