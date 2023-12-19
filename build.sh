@@ -8,7 +8,6 @@ node esbuild.mjs
 if [[ -z "$1" || "$1" -ne spa ]]; then
 	echo Full build
 	cp -R app/server/ dist/server/
-	# cp -R app/views/ dist/views/
 else
 	echo SPA build
 fi

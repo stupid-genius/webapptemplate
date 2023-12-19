@@ -38,7 +38,7 @@
 		"container": "docker run --name webapp -p80:3000 --rm webapptemplate",
 		"docker": "docker build -t webapptemplate .",
 		"esbuild": "esbuild",
-		"nodemon": "npx nodemon app/server/index.js",
+		"nodemon": "npx nodemon dist/server/index.js",
 		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
 		"start": "NODE_ENV=development ./serve.sh",
 		"test": "mocha test/server && karma start"

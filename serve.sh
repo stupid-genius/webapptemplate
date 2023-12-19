@@ -10,15 +10,12 @@ APPPORT=3000
 ./node_modules/.bin/browser-sync start --port 9000 --proxy localhost:$APPPORT --no-open -f dist/client &
 BSPID=$!
 echo BrowserSync PID $BSPID
-(fswatch -ol 1 app/client | xargs -n1 -I{} ./build.sh spa) &
+trap "kill $BSPID 2> /dev/null" INT HUP TERM QUIT ABRT EXIT
 if [[ -z "$1" || "$1" -ne spa ]]; then
+	(fswatch -ol 1 app | xargs -n1 -I{} ./build.sh) &
 	npm run nodemon
 else
 	echo Server in SPA mode
-	# node esbuild.mjs watch serve i
-	# ESPID=$!
-	# echo esbuild PID $ESPID
-
+	(fswatch -ol 1 app/client | xargs -n1 -I{} ./build.sh spa) &
 	npx http-server dist/client/ -p $APPPORT
 fi
-trap "kill $BSPID $ESPID" INT HUP TERM QUIT ABRT EXIT
