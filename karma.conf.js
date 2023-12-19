@@ -1,7 +1,13 @@
 module.exports = function(config) {
 	config.set({
 		frameworks: ['mocha', 'chai'],
-		browsers: ['Chrome', 'Firefox'],
+		customLaunchers: {
+			FirefoxHeadless: {
+				base: 'Firefox',
+				flags: ['-headless']
+			}
+		},
+		browsers: ['ChromeHeadless', 'FirefoxHeadless'],
 		reporters: ['mocha'],
 		// logLevel: config.LOG_DEBUG,
 		colors: true,
