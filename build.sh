@@ -12,5 +12,7 @@ else
 	echo SPA build
 fi
 cp app/client/* dist/client/ 2> /dev/null || :
-cp -R app/client/images dist/client/
+if [ -d "app/client/images" ] && [ -n "app/client/images/*" ]; then
+   cp -R app/client/images dist/client/
+fi
 echo Build complete

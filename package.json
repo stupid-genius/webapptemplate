@@ -10,7 +10,7 @@
 	"license": "GPL-3.0",
 	"main": "app/server/index.js",
 	"engines": {
-		"node": "^16.14.0"
+		"node": ">=16"
 	},
 	"dependencies": {
 		"ejs": "2.5.5",
