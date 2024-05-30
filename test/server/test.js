@@ -1,6 +1,8 @@
+const Logger = require('log-ng');
 const path = require('path');
-const Logger = require('../../dist/server/logger');
+const config = require('../../app/server/config');
 
+Logger(config);
 const logger = new Logger(path.basename(__filename));
 
 describe('RouteHelper Unit Tests', function(){

@@ -15,6 +15,7 @@
 	"dependencies": {
 		"ejs": "2.5.5",
 		"express": "^4.17.1",
+		"log-ng": "github:stupid-genius/log-ng",
 		"morgan": "^1.10.0",
 		"serve-favicon": "^2.5.0",
 		"winston": "^3.3.3"

@@ -1,9 +1,9 @@
 const express = require('express');
+const Logger = require('log-ng');
 const morgan = require('morgan');
 const servefavicon = require('serve-favicon');
 const path = require('path');
 const config = require('./config');
-const Logger = require('./logger');
 
 /* eslint-disable-next-line no-undef */
 const logger = new Logger(path.basename(__filename));
