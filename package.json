@@ -36,9 +36,10 @@
 	"scripts": {
 		"build": "npm run clean; ./build.sh",
 		"clean": "rm -rf dist",
+		"cluster": "npm run build; docker compose up --build; docker compose down",
 		"container": "docker run --name webapp -p80:3000 --rm webapptemplate",
-		"docker": "docker build -t webapptemplate .",
 		"esbuild": "esbuild",
+		"image": "docker build -t webapptemplate .",
 		"nodemon": "npx nodemon dist/server/index.js",
 		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
 		"start": "NODE_ENV=development ./serve.sh",

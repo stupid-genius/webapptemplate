@@ -5,7 +5,7 @@ const servefavicon = require('serve-favicon');
 const path = require('path');
 const config = require('./config');
 
-/* eslint-disable-next-line no-undef */
+Logger(config);
 const logger = new Logger(path.basename(__filename));
 
 const app = express();
