@@ -34,15 +34,15 @@
 		"mocha": "^9.2.2"
 	},
 	"scripts": {
-		"build": "npm run clean; ./build.sh",
+		"app": "npm run build; docker compose up --build; docker compose down",
+		"build": "npm run clean; ./tools/build.sh",
 		"clean": "rm -rf dist",
-		"cluster": "npm run build; docker compose up --build; docker compose down",
 		"container": "docker run --name webapp -p80:3000 --rm webapptemplate",
 		"esbuild": "esbuild",
 		"image": "docker build -t webapptemplate .",
 		"nodemon": "npx nodemon dist/server/index.js",
 		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
-		"start": "NODE_ENV=development ./serve.sh",
+		"start": "NODE_ENV=development ./tools/serve.sh",
 		"test": "mocha test/server && karma start"
 	}
 }

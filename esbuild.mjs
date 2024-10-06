@@ -8,7 +8,7 @@ const onBuild = {
 	setup(build){
 		build.onEnd(result => {
 			// console.log(result);
-			exec('./build.sh spa', (err, stdout, stderr) => {
+			exec('./tools/build.sh spa', (err, stdout, stderr) => {
 				if(err || stderr){
 					console.dir(err);
 					console.error(stderr);
