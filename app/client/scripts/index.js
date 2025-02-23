@@ -1,1 +1,3 @@
-console.log('Web app template');
+import './HtmxWebComponent.js';
+
+console.log('Web Components + htmx');
