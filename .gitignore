@@ -3,6 +3,10 @@
 .idea
 node_modules
 dist
-package
+pckg
+db/data
+docs/data
+grafana/data
+prometheus/data
 *.log
 *.log.gz

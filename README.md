@@ -9,13 +9,24 @@ I decided to put together my own starting point for simple, usually disposable, 
 **Uses:**
  - BrowserSync
  - EJS
- - esbuild
  - Express
  - Karma
  - Mocha
+ - MongoDB
  - Morgan
+ - MySQL
  - Node
+ - Sequelize
+ - Valkey
  - Winston
+ - esbuild
+
+Adding:
+ - ElasticSearch
+ - PWA
+ - Passkeys, QR codes
+ - WAF
+ - WebSockets
 
 ## Repo Layout
  - `app/`	- main application code

@@ -1,5 +1,14 @@
 version: "3"
 services:
+  mongo:
+    ports:
+      - "27017:27017"
+  mysql:
+    ports:
+      - "3306:3306"
   nginx:
     ports:
       - "80:80"
+  valkey:
+    ports:
+      - "6379:6379"
