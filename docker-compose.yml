@@ -1,8 +1,42 @@
 version: "3"
 services:
-  api:
+  app:
     build: .
     restart: always
+    environment:
+      APPHOST: ${APPHOST}
+      APPPORT: ${APPPORT}
+      APPURL: ${APPURL}
+      AUTH_STRATEGY: ${AUTH_STRATEGY}
+      DBHOST: ${DBHOST}
+      DBPORT: ${DBPORT}
+      DB_ROOT_PASSWD: ${DB_ROOT_PASSWD}
+      LOGFILE: ${LOGFILE}
+      LOGLEVEL: ${LOGLEVEL}
+      OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
+      OIDC_PROVIDER_URL: ${OIDC_PROVIDER_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+    depends_on:
+      mysql:
+        condition: service_healthy
+  mongo:
+    build: docs
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+  mysql:
+    build: db
+    command: --default-authentication-plugin=mysql_native_password
+    # command: --mysql-native-password=ON
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWD}
+    volumes:
+      - ./db/data:/var/lib/mysql
+    healthcheck:
+      test: 'mysql -p${DB_ROOT_PASSWD} -h localhost -e "SELECT 1+1 as result" &> /dev/null'
+      timeout: 5s
+      retries: 10
   nginx:
     build: nginx
     restart: always
@@ -10,5 +44,12 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - api
+      - app
+      - mongo
+      - valkey
+  valkey:
+    build: keyval
+    restart: always
 
+volumes:
+  mongo-data:

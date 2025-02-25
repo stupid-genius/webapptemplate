@@ -2,20 +2,17 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<title><%- title %></title>
+		<title><%- status %> - <%- title %></title>
 	</head>
 	<body>
 		<% include header %>
 
 		<section>
-			<%- message %>
-			<%- error.status %>
+			<%- status %> <%- message %>
 			<pre><code>
-<%- error.stack %>
+<%- stack %>
 			</code></pre>
 		</section>
-
-		<% include footer %>
 	</body>
 </html>
 
