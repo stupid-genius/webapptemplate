@@ -17,6 +17,7 @@ if [ -d "app/client/images" ] && [ -n "app/client/images/*" ]; then
    cp -R app/client/images dist/client/
 fi
 jq '{name: .name, description: .description, version: .version, dependencies: .dependencies}' package.json > dist/package.json
+cp package-lock.json dist/package-lock.json
 if [ "$NODE_ENV" = "production" ]; then
 	npm --prefix dist update --package-lock-only
 fi
