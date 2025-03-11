@@ -12,10 +12,12 @@ Uses:
  - Express
  - Karma
  - Mocha
+ - ModSecurity
  - MongoDB
  - Morgan
  - MySQL
  - Node
+ - PWA
  - Sequelize
  - Valkey
  - Winston
@@ -23,7 +25,5 @@ Uses:
 
 Adding:
  - ElasticSearch
- - PWA
  - Passkeys, QR codes
- - WAF
  - WebSockets

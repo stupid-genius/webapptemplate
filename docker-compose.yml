@@ -23,7 +23,8 @@ services:
     build: docs
     restart: always
     volumes:
-      - mongo-data:/data/db
+      - ./docs/data:/data/db
+      # - mongo-data:/data/db
   mysql:
     build: db
     command: --default-authentication-plugin=mysql_native_password
@@ -41,7 +42,6 @@ services:
     build: nginx
     restart: always
     ports:
-      - "80:80"
       - "443:443"
     depends_on:
       - app
@@ -51,5 +51,5 @@ services:
     build: keyval
     restart: always
 
-volumes:
-  mongo-data:
+# volumes:
+#   mongo-data:

@@ -5,5 +5,7 @@ node_modules
 dist
 package
 db/data
+docs/data
+*.pem
 *.log
 *.log.gz

@@ -55,9 +55,11 @@
 		"container": "docker run --name webapp -p80:3000 --rm webapptemplate",
 		"esbuild": "esbuild",
 		"image": "docker build -t webapptemplate .",
+		"mongo": "docker compose up -d mongo --build",
+		"mysql": "docker compose up -d mysql --build",
 		"nodemon": "npx nodemon dist/server/index.js",
 		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
-		"start": "DBHOST=localhost DOCSHOST=localhost NODE_ENV=development ./tools/serve.sh",
+		"start": "DBHOST=localhost DOCSHOST=localhost KEYVALHOST=localhost NODE_ENV=development ./tools/serve.sh",
 		"test": "mocha test && karma start"
 	}
 }
