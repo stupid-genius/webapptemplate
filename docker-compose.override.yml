@@ -6,6 +6,9 @@ services:
   mysql:
     ports:
       - "3306:3306"
+  nginx:
+    ports:
+      - "80:80"
   valkey:
     ports:
       - "6379:6379"
