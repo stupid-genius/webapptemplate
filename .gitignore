@@ -8,5 +8,6 @@ db/data
 docs/data
 grafana/data
 prometheus/data
+*.pem
 *.log
 *.log.gz

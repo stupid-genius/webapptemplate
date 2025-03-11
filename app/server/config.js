@@ -23,5 +23,6 @@ module.exports = Object.freeze({
 	OIDCScope: process.env.OIDC_SCOPE || 'openid',
 	sessionSecret: process.env.SESSION_SECRET,
 	keyvalHost: process.env.KEYVALHOST || 'valkey',
+	keyvalPort: process.env.KEYVALPORT || 6379,
 });
 

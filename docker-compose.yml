@@ -23,7 +23,8 @@ services:
     build: docs
     restart: always
     volumes:
-      - mongo-data:/data/db
+      - ./docs/data:/data/db
+      # - mongo-data:/data/db
   mysql:
     build: db
     command: --default-authentication-plugin=mysql_native_password
@@ -52,5 +53,5 @@ services:
     build: keyval
     restart: always
 
-volumes:
-  mongo-data:
+# volumes:
+#   mongo-data:

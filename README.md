@@ -12,10 +12,12 @@ I decided to put together my own starting point for simple, usually disposable, 
  - Express
  - Karma
  - Mocha
+ - ModSecurity
  - MongoDB
  - Morgan
  - MySQL
  - Node
+ - PWA
  - Sequelize
  - Valkey
  - Winston
@@ -23,9 +25,7 @@ I decided to put together my own starting point for simple, usually disposable, 
 
 Adding:
  - ElasticSearch
- - PWA
  - Passkeys, QR codes
- - WAF
  - WebSockets
 
 ## Repo Layout

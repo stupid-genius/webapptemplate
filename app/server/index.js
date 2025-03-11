@@ -16,7 +16,10 @@ require('apiclient')(require('./registry.js'));
 const logger = new Logger(path.basename(__filename));
 
 const sessionStore = new RedisStore({
-	client: new ioredis(),
+	client: new ioredis({
+		host: config.keyvalHost,
+		port: config.keyvalPort
+	}),
 	prefix: 'valkey-sess:',
 });
 
