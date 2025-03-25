@@ -29,6 +29,7 @@
 		"karma": "^6.4.2",
 		"karma-chai": "^0.1.0",
 		"karma-chrome-launcher": "^3.2.0",
+		"karma-esbuild": "^2.3.0",
 		"karma-firefox-launcher": "^2.1.2",
 		"karma-mocha": "^2.0.1",
 		"karma-mocha-reporter": "^2.2.5",
@@ -44,6 +45,6 @@
 		"nodemon": "npx nodemon dist/server/index.js",
 		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
 		"start": "NODE_ENV=development ./tools/serve.sh",
-		"test": "mocha test/server && karma start"
+		"test": "mocha test && karma start"
 	}
 }
