@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const Logger = require('log-ng');
 const path = require('path');
 
+Logger({logLevel: 'error', logFile: 'testServer.log'});
 const logger = new Logger(path.basename(__filename));
 
 const app = express();

@@ -1,14 +1,18 @@
 version: "3"
 services:
-  api:
+  app:
     build: .
     restart: always
+    environment:
+      APPHOST: ${APPHOST}
+      APPPORT: ${APPPORT}
   nginx:
     build: nginx
     restart: always
+    environment:
+      NGINX_PORT: ${NGINX_PORT:-443}
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_PORT}:443"
     depends_on:
-      - api
+      - app
 

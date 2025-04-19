@@ -7,7 +7,7 @@ set -e
 set -a
 . .env
 set +a
-APPPORT=3000
+: "${APPPORT:=3000}"
 
 if [ "$NODE_ENV" = "production" ]; then
 	if [ -n "$SPAMODE" ]; then
@@ -16,7 +16,7 @@ if [ "$NODE_ENV" = "production" ]; then
 		npx nodemon server/index.js
 	fi
 else
-	./node_modules/.bin/browser-sync start --port 9000 --proxy localhost:$APPPORT --no-open -f dist/client &
+	./node_modules/.bin/browser-sync start --ui-port 9001 --port 8000 --proxy localhost:$APPPORT --no-open -f dist/client &
 	BSPID=$!
 	echo BrowserSync PID $BSPID
 	trap "kill -0 $BSPID &> /dev/null && kill $BSPID && echo sending SIGTERM to $BSPID" INT HUP TERM QUIT ABRT EXIT
