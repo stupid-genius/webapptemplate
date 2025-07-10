@@ -1,155 +1,210 @@
-const OIDC = require('express-openid-connect').auth;
-const Logger = require('log-ng');
-const requiresAuth = require('express-openid-connect').requiresAuth;
-const passport = require('passport');
-const path = require('path');
+const bcrypt = require('bcrypt');
+const BearerStrategy = require('passport-http-bearer');
 const LocalStrategy = require('passport-local').Strategy;
-const MongoClient = require('mongodb').MongoClient;
-const app = require('./app.js');
+const Logger = require('log-ng');
+const { ObjectId } = require('mongodb');
+const passport = require('passport');
+const path = require('node:path');
+const {auth: OIDC, requiresAuth} = require('express-openid-connect');
+const {app} = require('./app.js');
 const config = require('./config.js');
+const DocsClient = require('./DocsClient.js');
 
 const logger = new Logger(path.basename(__filename));
 
-let strategy, strategyName;
 let authenticateRequest;
+const connectionString = `mongodb://root:${config.docs.pass}@${config.docs.host}:${config.docs.port}/${config.docs.db}?authSource=admin&authMechanism=SCRAM-SHA-256`;
 
-switch(config.authStrategy){
-case 'oidc':
-	app.use(OIDC({
-		authRequired: false,
-		issuerBaseURL: config.OIDCProviderMetadataURL,
-		baseURL: config.appURL,
-		clientID: config.OIDCClientID,
-		clientSecret: config.OIDCClientSecret,
-		secret: config.sessionSecret
-	}));
+passport.use('bearer', new BearerStrategy(
+	async function(token, done){
+		logger.debug('Authenticating via bearer token');
+
+		try{
+			const mc = await DocsClient(connectionString);
+			const user = await mc.collection('users').findOne({
+				token
+			});
+			if(!user){
+				logger.warn(`Invalid token: ${token}`);
+				return done(null, false);
+			}
+			logger.info(`Successfully authenticated token user ${user.username}`);
+			return done(null, {
+				db: mc,
+				user
+			});
+		}catch(err){
+			logger.error(`Token auth error: ${err}`);
+			return done(err);
+		}
+	}
+));
+passport.use('local', new LocalStrategy(
+	async function(username, password, done){
+		if(!username || !password){
+			logger.warn('Username or password not provided');
+			return done(null, false, { message: 'Missing credentials' });
+		}
+
+		logger.debug(`Authenticating via local account: ${username}`);
+		username = username.toLowerCase(); // FIXME
+		try{
+			const mc = await DocsClient(connectionString);
+			const user = await mc.collection('users').findOne({
+				$or: [
+					{email: username},
+					{username}
+				]
+			});
+			if(!user){
+				logger.warn(`User not found: ${username}`);
+				return done(null, false, { message: 'Incorrect username or email.' });
+			}
+
+			const isValid = await bcrypt.compare(password, user.password);
+			if(!isValid){
+				logger.warn(`Invalid password for user: ${username}`);
+				return done(null, false, { message: 'Incorrect password.' });
+			}
+
+			logger.info(`Successfully authenticated ${username}`);
+			return done(null, {
+				user
+			});
+		}catch(e){
+			logger.error(`Authentication error for ${username}: ${e}`);
+			return done(e);
+		}
+	}
+));
+
+switch(config.auth.strategy){
+case 'oidc': {
+	app.use(
+		OIDC({
+			authRequired: false,
+			issuerBaseURL: config.auth.OIDCProviderMetadataURL,
+			baseURL: `${config.appURL}:${config.appPort}`,
+			clientID: config.auth.OIDCClientID,
+			clientSecret: config.auth.OIDCClientSecret,
+			secret: config.sessionSecret,
+			authorizationParams: {
+				response_type: 'code',
+				// response_mode: 'form_post' // or 'query' for HTTP dev
+			}
+		})
+	);
 	authenticateRequest = requiresAuth();
+	const oidcAuth = requiresAuth();
+	authenticateRequest = function(req, res, next){
+		if(req.isAuthenticated()){
+			logger.debug(`${req.user.username} has a valid session`);
+			next();
+		}else{
+			logger.debug(`Checking auth for request ${req.url}`);
+			oidcAuth(req, res, async function(err){
+				if(err){
+					logger.warn(`Failed to authenticate: ${err}`);
+					return next(err);
+				}
+
+				if(req.oidc?.isAuthenticated() && req.oidc?.user){
+					const token = req.oidc.user;
+					logger.debug(`User authenticated via OIDC: ${JSON.stringify(token)}`);
+					const mc = await DocsClient(connectionString);
+					const user = await mc.collection('users').findOne({
+						email: token.email.toLowerCase()
+					});
+					logger.debug(`Mapped OIDC user to local user: ${JSON.stringify(user)}`);
+					if(user === null){
+						logger.warn(`User ${token.email} not found in local database`);
+						return next(new Error('User not found in local database'));
+					}
+					req.login({user}, function(loginErr){
+						if(loginErr){
+							logger.error(`Failed to create Passport session: ${loginErr}`);
+							return next(loginErr);
+						}
+						next();
+					});
+				}else{
+					next(new Error('User is not authenticated'));
+				}
+			});
+		}
+	};
 	break;
+}
 case 'passkey':
 case 'qr':
 default:
-	logger.warn(`Unrecognized passport strategy: ${config.authStrategy}−defaulting to LocalStrategy`);
-	/* falls through */
+	logger.warn(`Unrecognized passport strategy: ${config.auth.strategy}−defaulting to LocalStrategy`);
+	/* fallthrough */
 case 'local':
-	strategyName = 'local';
-	strategy = new LocalStrategy({
-		session: false,
-	},
-	async function(username, password, done){
-		const connString = `mongodb://${username}:${password}@${config.docsHost}/?authMechanism=DEFAULT`;
-		logger.info(`Authenticating ${username}`);
-
-		let mc;
-		try{
-			mc = await getMongoClient(connString);
-			logger.info(`Successfully authenticated ${username}`);
-			return done(null, {
-				connString,
-				db: mc,
-				name: username
-			});
-		}catch(e){
-			logger.warn(`Failed to authenticate ${username}: ${e}`);
-			return done(null, false);
-		}
-	});
-	passport.use(strategyName, strategy);
 	authenticateRequest = function(req, res, next){
-		logger.debug(`Checking auth for request ${req.url}`);
 		if(req.isAuthenticated()){
-			logger.debug(`${req.user.name} has a valid session`);
+			logger.debug(`${req.user.email} has a valid session`);
 			next();
 		}else{
-			passport.authenticate(strategyName, {
-				failureFlash: true,
-				failureMessage: true
-				// failureRedirect: '/login.html',
-				// successRedirect: '/'
-			}, (err, user, info) => {
-				if(info !== undefined){
-					logger.info(info.message);
-				}
-				if(!user){
-					logger.warn('Not authenticated');
-					res.status(401);
-					if(req.headers?.['accept'] === 'application/json; q=0'){
-						return res.end();
-					}else{
-						return res.redirect('/login.html');
+			logger.debug(`Checking local credentials for request ${req.url}`);
+			if(req.headers['authorization']?.startsWith('Bearer ')){
+				passport.authenticate('bearer', {session: false})(req, res, next);
+			}else if(req.headers?.accept?.includes('application/json')){
+				logger.debug('API request detected, no response');
+				passport.authenticate('local', {
+				}, (err, user, info) => {
+					if(err){
+						logger.error(err);
+						return next(err);
 					}
-				}
-				if(err){
-					logger.error(err);
-					return next(err);
-				}
-				if(req.headers?.['accept'] === 'application/json; q=0'){
-					req.login(user, next);
-				}else{
-					req.login(user, () => {
-						res.redirect('/');
+					if(info !== undefined){
+						logger.info(`Authentication info: ${JSON.stringify(info)}`);
+					}
+					if(!user){
+						logger.warn('Not authenticated');
+						return res.status(401).end();
+					}
+					req.login(user, (err) => {
+						if(err){
+							logger.error(err);
+							return next(err);
+						}
+						logger.debug(`User ${user.user.username} logged in via API`);
+						res.status(204).end();
 					});
-				}
-			})(req, res, next);
+				})(req, res, next);
+			}else{
+				logger.debug('Web request detected, using redirect');
+				passport.authenticate('local', {
+					// failureFlash: true,
+					// failureMessage: true,
+					failureRedirect: '/login.html',
+					successRedirect: '/'
+				})(req, res, next);
+			}
 		}
 	};
 	break;
 }
 
 passport.serializeUser((user, done) => {
-	/* eslint-disable-next-line no-unused-vars */
-	const { db, password, ...serializable } = user;
-	logger.debug(`Serializing user ${JSON.stringify(serializable)}`);
-	done(null, serializable);
+	logger.debug(`Serializing user ${JSON.stringify(user)}`);
+	done(null, user.user._id.toString('hex'));
 });
-passport.deserializeUser(async (user, done) => {
-	logger.debug(`Deserializing user ${JSON.stringify(user)}`);
+
+passport.deserializeUser(async (id, done) => {
+	logger.debug(`Deserializing user ${id}`);
 	try{
-		const mc = await getMongoClient(user.connString);
-		done(null, {
-			db: mc,
-			...user
+		const mc = await DocsClient(connectionString);
+		const user = await mc.collection('users').findOne({
+			_id: new ObjectId(id)
 		});
+		done(null, user);
 	}catch(e){
 		logger.error(`Deserialization failed: ${e}`);
 		done(e);
 	}
 });
-
-async function getMongoClient(connectionString){
-	logger.info(`Attempting to open connection: ${connectionString}`);
-	let mc;
-	try{
-		mc = new MongoClient(connectionString);
-		await mc.connect();
-		await mc.db('admin').command({ ping: 1 });
-		return mc;
-	}catch(err){
-		logger.warn(err);
-		if(mc){
-			await mc.close();
-		}
-		throw new Error(err);
-	}
-}
-
-// const connString = `mongodb://${username}:${password}@${config.docsHost}/?authMechanism=DEFAULT`;
-// function LoggableString(template, model){
-// 	const string = {};
-// 	Object.defineProperties(string, {
-// 		loggable: {
-// 			get: function(){
-// 				return '';
-// 			}
-// 		},
-// 		value: {
-// 			get: function(){
-// 				return '';
-// 			}
-// 		}
-// 	});
-// 	Object.freeze(string);
-// 	return string;
-// }
 
 module.exports = {
 	authenticateRequest

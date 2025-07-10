@@ -1,10 +1,9 @@
-Web App Template
-================
+Web App Template (Advanced)
+===========================
 ## We can at least start from a sane place
+### …but maybe we can build something better
 
-The scaffolding tools have become unusable, chasing after every fad, with the attention span of a chipmunk.
-
-I decided to put together my own starting point for simple, usually disposable, web apps.
+This branch is the advanced version of the Web App Template.
 
 **Uses:**
  - BrowserSync
@@ -34,3 +33,22 @@ Adding:
  - `nginx/`	- front-end container, reverse proxy, WAF
  - `test/`	- run tests with `npm test`
  - `tools/`	- build, serve, etc tools
+
+## Port Plan
+ - 80		- nginx
+ - 443		- nginx
+ - 3000 	- Express
+ - 3306 	- MySQL
+ - 6379 	- Redis
+ - 8000		- BrowserSync-proxy
+ - 8070		- phpMyAdmin
+ - 8080		- Mongo Express
+ - 8090		- Redis Commander
+ - 9001		- BrowserSync-UI
+ - 9080 	- Grafana
+ - 9090 	- Prometheus
+ - 9104		- mysql exporter
+ - 9113		- nginx exporter
+ - 9216		- mongodb exporter
+ - 27017	- MongoDB
+

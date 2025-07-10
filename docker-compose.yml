@@ -10,7 +10,8 @@ services:
       AUTH_STRATEGY: ${AUTH_STRATEGY}
       DBHOST: ${DBHOST}
       DBPORT: ${DBPORT}
-      DB_ROOT_PASSWD: ${DB_ROOT_PASSWD}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      DOCS_ROOT_PASSWORD: ${DOCS_ROOT_PASSWORD}
       LOGFILE: ${LOGFILE}
       LOGLEVEL: ${LOGLEVEL}
       OIDC_CLIENT_ID: ${OIDC_CLIENT_ID}
@@ -22,6 +23,9 @@ services:
   mongo:
     build: docs
     restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${DOCS_ROOT_PASSWORD}
     volumes:
       - ./docs/data:/data/db
       # - mongo-data:/data/db
@@ -31,20 +35,18 @@ services:
     # command: --mysql-native-password=ON
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     volumes:
       - ./db/data:/var/lib/mysql
     healthcheck:
-      test: 'mysql -p${DB_ROOT_PASSWD} -h localhost -e "SELECT 1+1 as result" &> /dev/null'
+      test: 'mysql -p${DB_ROOT_PASSWORD} -h localhost -e "SELECT 1+1 as result" &> /dev/null'
       timeout: 5s
       retries: 10
   nginx:
     build: nginx
     restart: always
-    environment:
-      NGINX_PORT: ${NGINX_PORT:-443}
     ports:
-      - "${NGINX_PORT}:443"
+      - "${NGINX_PORT:-443}:443"
     depends_on:
       - app
       - mongo
@@ -52,6 +54,64 @@ services:
   valkey:
     build: keyval
     restart: always
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+  grafana:
+    image: grafana/grafana:latest
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    restart: always
+    depends_on:
+      - prometheus
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    command: -nginx.scrape-uri=http://nginx/nginx_status
+    depends_on:
+      - nginx
+  # mongodb-exporter:
+  #   image: bitnami/mongodb-exporter:latest
+  #   environment:
+  #     MONGODB_URI: mongodb://admin:${DOCS_ROOT_PASSWORD}@${DOCSHOST:-mongo}:${DOCSPORT:-27017}/admin?authMechanism=SCRAM-SHA-256
+  #   restart: always
+  #   depends_on:
+  #     - mongo
+  # mysqld-exporter:
+  #   image: prom/mysqld-exporter:latest
+  #   command:
+  #     # need to find a way to pass the config file
+  #     - "--config.my-cnf=/etc/my.cnf"
+  #   environment:
+  #     DATA_SOURCE_NAME: root:${DB_ROOT_PASSWORD}@tcp(${DBHOST:-localhost}:${DBPORT:-3306})/
+  #   ports:
+  #     - "9104:9104"
+  #   restart: always
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+
+  # These will not work on MacOS
+  # node-exporter:
+  #   image: prom/node-exporter:latest
+  #   ports:
+  #     - "9100:9100"
+  #   restart: always
+  #   command:
+  #     - '--path.rootfs=/host'
+  #   volumes:
+  #     - /:/host:ro,rslave
+  # cadvisor:
+  #   image: gcr.io/google-containers/cadvisor:latest
+  #   ports:
+  #     - "8080:8080"
+  #   restart: always
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker/:/var/lib/docker:ro
 
 # volumes:
 #   mongo-data:

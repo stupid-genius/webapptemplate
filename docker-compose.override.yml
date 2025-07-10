@@ -2,13 +2,59 @@ version: "3"
 services:
   mongo:
     ports:
-      - "27017:27017"
+      - "${DOCSPORT:-27017}:${DOCSPORT:-27017}"
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8080:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${DOCS_ROOT_PASSWORD}
+      ME_CONFIG_BASICAUTH_USERNAME: mongo
+      ME_CONFIG_BASICAUTH_PASSWORD: ${DOCS_ROOT_PASSWORD}
+    depends_on:
+      - mongo
   mysql:
     ports:
-      - "3306:3306"
+      - "${DBPORT:-3306}:${DBPORT:-3306}"
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: ${DBPORT:-3306}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "8070:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
   nginx:
     ports:
       - "80:80"
   valkey:
     ports:
       - "6379:6379"
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    ports:
+      - "8090:8081"
+    environment:
+      - REDIS_HOSTS=valkey:valkey
+    depends_on:
+      - valkey
+  prometheus:
+    ports:
+      - "9090:9090"
+  grafana:
+    ports:
+      - "9080:3000"
+  nginx-exporter:
+    ports:
+      - "9113:9113"
+  # mongodb-exporter:
+  #   ports:
+  #     - "9216:9216"
+

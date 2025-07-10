@@ -1,73 +1,54 @@
-const app = require('./app.js');
-const bodyParser = require('body-parser');
-const express = require('express');
-const ioredis = require('ioredis');
-const SessionManager = require('express-session');
-const {RedisStore} = require('connect-redis');
+require('./app.js');
+
+const cluster = require('node:cluster');
 const Logger = require('log-ng');
-const morgan = require('morgan');
-const servefavicon = require('serve-favicon');
-const passport = require('passport');
+const os = require('node:os');
 const path = require('node:path');
-const config = require('./config.js');
-const Model = require('./model/model.js');
 
-require('apiclient')(require('./registry.js'));
 const logger = new Logger(path.basename(__filename));
+const numCPUs = os.cpus().length;
 
-const sessionStore = new RedisStore({
-	client: new ioredis({
-		host: config.keyvalHost,
-		port: config.keyvalPort
-	}),
-	prefix: 'valkey-sess:',
-});
+if(cluster.isPrimary){
+	logger.info(`Master ${process.pid} is running`);
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+	for(let i = 0; i < numCPUs; i++){
+		cluster.fork();
+	}
 
-app.use(morgan('common'));
-app.use(servefavicon(path.join(__dirname, '../client/favicon.ico')));
-app.use(bodyParser.json());
-app.use(bodyParser.text({ type: 'text/plain' }));
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(SessionManager({
-	resave: false,
-	saveUninitialized: false,
-	secret: config.sessionSecret,
-	store: sessionStore
-}));
-app.use(passport.initialize());
-app.use(passport.session({}));
-
-app.use(express.static(path.join(__dirname, '../client')));
-app.use(require('./routes.js'));
-
-app.use((_req, _res, next) => {
-	const err = new Error('Not Found');
-	err.status = 404;
-	next(err);
-});
-
-/* eslint-disable no-unused-vars */
-app.use((err, _req, res, _next) => {
-	res.status(err.status || 500);
-	res.render('error', {
-		message: err.message,
-		stack: logger.level === 'debug' ? err.stack : {},
-		status: err.status,
-		title: 'Error'
+	cluster.on('exit', (worker, code, signal) => {
+		logger.warn(`Worker ${worker.process.pid} died (code ${code}, signal ${signal}). Restarting...`);
+		cluster.fork();
 	});
+	cluster.on('online', (worker) => {
+		logger.info(`Worker ${worker.process.pid} is online`);
+	});
+	cluster.on('listening', (worker, address) => {
+		logger.info(`Worker ${worker.process.pid} is listening on ${address.address}:${address.port}`);
+	});
+	cluster.on('disconnect', (worker) => {
+		logger.warn(`Worker ${worker.process.pid} disconnected`);
+	});
+}else{
+	require('./worker.js');
+}
+
+function handleProcessExit(){
+	for(const id in cluster.workers){
+		cluster.workers[id].process.kill('SIGTERM');
+	}
+	process.exit(0);
+}
+
+process.on('SIGTERM', handleProcessExit);
+process.on('SIGINT', handleProcessExit);
+
+// Handle unhandled promise rejections to prevent app crashes
+// usecase: email sending failures and other async operations in app
+process.on('unhandledRejection', (reason, promise) => {
+	logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-Model.initialize({alter: true}).then(() => {
-	logger.info('Model initialized');
-	app.listen(config.appPort, config.appHost, () => {
-		logger.debug(`server running in ${config.nodeEnv} mode`);
-		logger.info(`server listening on port ${config.appPort}`);
-	});
-}).catch((e) => {
-	logger.error(`Initializing model: ${e}`);
-	process.exit(1);
+process.on('uncaughtException', (error) => {
+	logger.error('Uncaught Exception:', error);
 });
+

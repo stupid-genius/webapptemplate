@@ -10,9 +10,9 @@ async function connectORM(){
 	if(connectORM.instance !== undefined){
 		return connectORM.instance;
 	}
-	const sequelize = new Sequelize('WEBAPPTEMPLATE', 'root', config.dbPass, {
-		host: config.dbHost,
-		port: config.dbPort,
+	const sequelize = new Sequelize('WEBAPPTEMPLATE', 'root', config.db.pass, {
+		host: config.db.host,
+		port: config.db.port,
 		dialect: 'mysql',
 		logging: (...msg) => logger.debug(msg)
 	});
@@ -31,6 +31,8 @@ async function connectORM(){
 
 async function initialize(syncOptions){
 	const sequelize = await connectORM();
+
+	// initialize models
 
 	await sequelize.sync(syncOptions);
 	logger.info(migrate());

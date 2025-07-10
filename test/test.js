@@ -1,10 +1,16 @@
 const Logger = require('log-ng');
-const path = require('path');
+const path = require('node:path');
 
 Logger({logLevel: 'info', logFile: 'mochaTest.log'});
 const logger = new Logger(path.basename(__filename));
 
 const app = require('./testServer.js');
+
+function flushLogs(){
+	return new Promise((resolve) => {
+		logger.on('finish', resolve);
+	});
+}
 
 exports.mochaHooks = {
 	beforeAll(done){
@@ -12,8 +18,11 @@ exports.mochaHooks = {
 		logger.info('Test server started');
 	},
 	afterAll(done){
-		this.testServer.close(done);
-		logger.info('Test server closed');
+		this.testServer.close(()=>{
+			logger.info('Test server closed');
+			this.testServer = null;
+			logger.end();
+			flushLogs().then(done);
+		});
 	}
 };
-
