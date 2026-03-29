@@ -43,12 +43,11 @@ process.on('SIGTERM', handleProcessExit);
 process.on('SIGINT', handleProcessExit);
 
 // Handle unhandled promise rejections to prevent app crashes
-// usecase: email sending failures and other async operations in app
 process.on('unhandledRejection', (reason, promise) => {
-	logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+	logger.error(`Unhandled Rejection at: ${promise}\nReason: ${reason}`);
 });
 
 process.on('uncaughtException', (error) => {
-	logger.error('Uncaught Exception:', error);
+	logger.error(`Uncaught Exception: ${error.message}\nStack Trace: ${error.stack}`);
 });
 

@@ -1,4 +1,5 @@
 const fs = require('fs');
+const Logger = require('log-ng');
 const path = require('path');
 const Sequelize = require('sequelize');
 const process = require('process');
@@ -6,6 +7,11 @@ const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.json')[env];
 const db = {};
+
+Logger({logLevel: 'info', logFile: 'sequelize.log'});
+const logger = new Logger(path.basename(__filename));
+
+logger.info(`Initializing standalone ORM in ${env} mode`);
 
 let sequelize;
 if(config.use_env_variable){

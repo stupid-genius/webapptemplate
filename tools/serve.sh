@@ -23,10 +23,21 @@ else
 	echo BrowserSync PID $BSPID
 	trap "kill -0 $BSPID &> /dev/null && kill $BSPID && echo sending SIGTERM to $BSPID; docker compose down" INT HUP TERM QUIT ABRT EXIT
 	docker compose up -d mysql mongo valkey mongo-express --build --no-recreate
-	while ! docker exec -i "$REPO_DIR-mysql-1" mysql -p$DB_ROOT_PASSWORD -h localhost -e "SELECT 1+1 as result" &> /dev/null
-	do
-		sleep 5
+	while ! docker exec -i "$REPO_DIR-mysql-1" mysql -p$DB_ROOT_PASSWORD -h localhost -e "SELECT 1+1 as result" &> /dev/null; do
+		secs="$secs."
+		echo -ne "Waiting for MySQL$secs\033[K\r"
+		[[ ${#secs} -ge 10 ]] && secs=""
+		sleep 1
 	done
+	echo -e "\r\033[KMySQL is up!"
+	while ! docker exec -i "$REPO_DIR-mongo-1" mongosh --quiet --eval "db.adminCommand('ping')" &> /dev/null; do
+		secs="$secs."
+		echo -ne "Waiting for MongoDB$secs\033[K\r"
+		[[ ${#secs} -ge 10 ]] && secs=""
+			sleep 1
+	done
+	echo -e "\r\033[KMongoDB is up!"
+
 	if [ -n "$SPAMODE" ]; then
 		echo Server in SPA mode
 		(fswatch -ol 1 app/client | xargs -n1 -I{} ./tools/build.sh spa) &

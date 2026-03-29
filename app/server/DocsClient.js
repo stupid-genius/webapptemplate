@@ -21,7 +21,7 @@ async function DocsClient(username, password, authDB){
 	logger.debug(`Connecting to MongoDB at ${connectionString}`);
 	if(DocsClient.cache.has(connectionString)){
 		const cached = DocsClient.cache.get(connectionString);
-		if(cached.isConnected?.()){
+		if(await cached.isConnected?.()){
 			logger.debug(`Returning cached DocsClient instance: ${connectionString}`);
 			return cached;
 		}else{

@@ -13,7 +13,7 @@ const DocsClient = require('./DocsClient.js');
 const logger = new Logger(path.basename(__filename));
 
 let authenticateRequest;
-const connectionString = `mongodb://root:${config.docs.pass}@${config.docs.host}:${config.docs.port}/${config.docs.db}?authSource=admin&authMechanism=SCRAM-SHA-256`;
+const connectionString = `mongodb://admin:${config.docs.pass}@${config.docs.host}:${config.docs.port}/${config.docs.db}?authSource=admin&authMechanism=SCRAM-SHA-256`;
 
 passport.use('bearer', new BearerStrategy(
 	async function(token, done){
@@ -69,6 +69,7 @@ passport.use('local', new LocalStrategy(
 
 			logger.info(`Successfully authenticated ${username}`);
 			return done(null, {
+				db: mc,
 				user
 			});
 		}catch(e){
@@ -84,7 +85,7 @@ case 'oidc': {
 		OIDC({
 			authRequired: false,
 			issuerBaseURL: config.auth.OIDCProviderMetadataURL,
-			baseURL: `${config.appURL}:${config.appPort}`,
+			baseURL: `${config.app.URL}:${config.app.port}`,
 			clientID: config.auth.OIDCClientID,
 			clientSecret: config.auth.OIDCClientSecret,
 			secret: config.sessionSecret,
@@ -143,7 +144,7 @@ default:
 case 'local':
 	authenticateRequest = function(req, res, next){
 		if(req.isAuthenticated()){
-			logger.debug(`${req.user.email} has a valid session`);
+			logger.debug(`${req.user.user.username} has a valid session`);
 			next();
 		}else{
 			logger.debug(`Checking local credentials for request ${req.url}`);
@@ -199,7 +200,7 @@ passport.deserializeUser(async (id, done) => {
 		const user = await mc.collection('users').findOne({
 			_id: new ObjectId(id)
 		});
-		done(null, user);
+		done(null, {db: mc, user});
 	}catch(e){
 		logger.error(`Deserialization failed: ${e}`);
 		done(e);

@@ -10,7 +10,7 @@ const logger = new Logger(path.basename(__filename));
 const router = express.Router();
 
 router.use(authenticateRequest);
-router.post('/login', (req, res) => {
+router.post('/login', (_req, res) => {
 	res.redirect('/');
 });
 router.use('/logout', (req, res, next) => {

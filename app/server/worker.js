@@ -42,6 +42,14 @@ app.use(SessionManager({
 app.use(passport.initialize());
 app.use(passport.session({}));
 
+// TODO move to master process
+app.use('/health', (_req, res) => {
+	res.status(200).json({
+		status: 'ok',
+		uptime: process.uptime()
+	});
+});
+
 app.use(servefavicon(path.join(__dirname, '../client/favicon.ico')));
 app.use('/robots.txt', express.static(path.join(__dirname, '../client/robots.txt')));
 app.use('/styles/login.css', express.static(path.join(__dirname, '../client/styles/login.css')));
@@ -49,6 +57,33 @@ app.use('/login.html', express.static(path.join(__dirname, '../client/login.html
 
 app.use(router);
 app.use(express.static(path.join(__dirname, '../client')));
+// TODO optimize static file serving by using X-Accel-Redirect and letting nginx handle it
+// but need to check if nginx is present first
+// app.use((req, res, next) => {
+// 	const filePath = path.resolve('../client', `./${req.path}`);
+
+// 	if(!filePath.startsWith('../client')){
+// 		return next();
+// 	}
+
+// 	fs.stat(filePath, (err, stats) => {
+// 		if(!err && stats.isFile()){
+// 			const internalPath = `/internal${req.path}`;
+// 			res.setHeader('X-Accel-Redirect', internalPath);
+
+// 			if(req.path.endsWith('.css')){
+// 				res.setHeader('Content-Type', 'text/css');
+// 			} else if(req.path.endsWith('.js')){
+// 				res.setHeader('Content-Type', 'application/javascript');
+// 			} else if(req.path.endsWith('.svg')){
+// 				res.setHeader('Content-Type', 'image/svg+xml');
+// 			}
+
+// 			return res.status(200).end();
+// 		}
+// 		next();
+// 	});
+// });
 
 app.use((_req, _res, next) => {
 	const err = new Error('Not Found');
